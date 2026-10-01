@@ -1,0 +1,52 @@
+{
+  "name": "fidelity-kit-three-gpu-pathtracer",
+  "version": "0.1.0",
+  "description": "Reusable fidelity-kit renderer for legacy Three.js WebGL GPU path tracing",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bhouston/fidelity-kit-three-gpu-pathtracer.git"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "THIRD_PARTY_LICENSES.txt"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "tsc": "tsc --noEmit",
+    "lint": "oxlint src",
+    "test": "vitest run",
+    "prepack": "npm run build"
+  },
+  "devDependencies": {
+    "@onirenaud/node-webgl": "^0.2.0",
+    "@types/node": "^25.6.0",
+    "@types/three": "^0.186.0",
+    "@vitest/coverage-v8": "^4.1.10",
+    "oxfmt": "^0.58.0",
+    "oxlint": "^1.73.0",
+    "three": "^0.186.0",
+    "three-gpu-pathtracer": "^0.0.24",
+    "three-mesh-bvh": "^0.9.15",
+    "typescript": "^7",
+    "vitest": "^4.1.10"
+  },
+  "peerDependencies": {
+    "three": ">=0.180.0 <0.200.0",
+    "three-gpu-pathtracer": ">=0.0.24 <0.1.0",
+    "three-mesh-bvh": ">=0.9.15 <0.10.0"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "packageManager": "pnpm@11.0.8"
+}

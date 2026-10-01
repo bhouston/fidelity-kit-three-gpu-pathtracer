@@ -1,0 +1,3 @@
+allowBuilds:
+  "@onirenaud/node-webgl": true
+  esbuild: true

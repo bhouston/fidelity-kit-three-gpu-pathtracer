@@ -39,7 +39,8 @@ it.skipIf(process.env.WEBGL_INTEGRATION !== "1")(
       gradientBackground: { center: new Color(0x808080), edge: new Color(0x808080) },
     });
     try {
-      for (let i = 0; i < 4; i++) {
+      const deadline = performance.now() + 30_000;
+      while (handle.frames < 4 && performance.now() < deadline) {
         handle.render();
         await new Promise((resolve) => setImmediate(resolve));
       }
@@ -52,7 +53,10 @@ it.skipIf(process.env.WEBGL_INTEGRATION !== "1")(
       const second = camera.clone();
       second.position.x = 0.1;
       handle.setCamera(second);
-      handle.render();
+      while (handle.frames < 1 && performance.now() < deadline) {
+        handle.render();
+        await new Promise((resolve) => setImmediate(resolve));
+      }
       expect(handle.frames).toBe(1);
       expect(scene.background).toBeNull();
       expect(camera.aspect).toBe(1);

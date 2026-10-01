@@ -106,10 +106,18 @@ function createBlitMaterial(background?: GradientBackground): ShaderMaterial {
 }
 
 export function dequantizeAttributes(scene: Object3D): void {
+  const prepared = new Map<BufferGeometry, BufferGeometry>();
   scene.traverse((object) => {
     let geometry = (object as Mesh).geometry as BufferGeometry | undefined;
     if (!geometry) return;
+    const cached = prepared.get(geometry);
+    if (cached) {
+      (object as Mesh).geometry = cached;
+      return;
+    }
+    const source = geometry;
     geometry = geometry.clone();
+    prepared.set(source, geometry);
     (object as Mesh).geometry = geometry;
     for (const [name, attribute] of Object.entries(geometry.attributes)) {
       if (!("isInterleavedBufferAttribute" in attribute) && attribute.array instanceof Float32Array)

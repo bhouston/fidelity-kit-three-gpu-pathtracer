@@ -8,7 +8,8 @@
     "url": "git+https://github.com/bhouston/fidelity-kit-three-gpu-pathtracer.git"
   },
   "files": [
-    "dist",
+    "dist/*.js",
+    "dist/*.d.ts",
     "README.md",
     "LICENSE",
     "THIRD_PARTY_LICENSES.txt"

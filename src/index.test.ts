@@ -7,7 +7,10 @@ it("prepares quantized geometry without changing the original geometry", () => {
   const scene = new Scene();
   const mesh = new Mesh(geometry, new MeshStandardMaterial());
   scene.add(mesh);
+  const second = new Mesh(geometry, new MeshStandardMaterial());
+  scene.add(second);
   dequantizeAttributes(scene);
+  expect(second.geometry).toBe(mesh.geometry);
   expect(mesh.geometry).not.toBe(geometry);
   expect(mesh.geometry.attributes.position?.array).toBeInstanceOf(Float32Array);
   expect([...mesh.geometry.attributes.position!.array]).toEqual([1, 0, -1]);

@@ -1,0 +1,12 @@
+packages:
+  - submodules/three-gpu-pathtracer
+
+overrides:
+  three-gpu-pathtracer: "workspace:*"
+  three: "^0.186.0"
+  "@types/three": "^0.186.0"
+
+allowBuilds:
+  "@onirenaud/node-webgl": true
+  esbuild: true
+  puppeteer: false

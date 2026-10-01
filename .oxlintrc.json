@@ -1,0 +1,5 @@
+{
+  "categories": { "correctness": "error", "suspicious": "warn" },
+  "ignorePatterns": ["submodules/**", "dist/**", "coverage/**"],
+  "rules": { "eslint/no-underscore-dangle": "off" }
+}

@@ -36,7 +36,7 @@
     "oxfmt": "^0.58.0",
     "oxlint": "^1.73.0",
     "three": "^0.186.0",
-    "three-gpu-pathtracer": "^0.0.24",
+    "three-gpu-pathtracer": "workspace:*",
     "three-mesh-bvh": "^0.9.15",
     "typescript": "^7",
     "vitest": "^4.1.10"

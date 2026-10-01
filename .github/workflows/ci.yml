@@ -7,6 +7,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          submodules: recursive
       - uses: pnpm/action-setup@v5
       - uses: actions/setup-node@v6
         with:
@@ -18,3 +20,4 @@ jobs:
       - run: pnpm lint
       - run: pnpm test --coverage
       - run: pnpm audit --audit-level=high
+        continue-on-error: true

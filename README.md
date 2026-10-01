@@ -32,9 +32,13 @@ The renderer clones the scene and camera and prepares cloned geometry, preservin
 
 `bakeEnvironment(webglRenderer, environmentScene, resolution = 256)` returns a readable equirectangular HDR DataTexture that can also be passed to `fidelity-kit-blender/three`'s `exportEnvironment`. The caller owns and disposes that texture. `dequantizeAttributes(object)` prepares cloned float geometry on the supplied objects; the renderer applies this to its own snapshot.
 
-Three.js, three-gpu-pathtracer and three-mesh-bvh are peers, so fidelity suites can use their own forks and ensure one Three.js instance. This package initially targets the legacy WebGL backend. The WebGPU backend remains in the consuming fidelity suite and is not part of this package's API. Upstream material/light limitations still apply; custom postprocessing is not exported or reproduced.
+Three.js, three-gpu-pathtracer and three-mesh-bvh are peers, so fidelity suites can use their own forks and ensure one Three.js instance. The adapter imports the path tracer's ESM source entry explicitly, avoiding the historical CommonJS bundle selected by older npm releases. No `three.cjs` build is required. This package initially targets the legacy WebGL backend. The WebGPU backend remains in the consuming fidelity suite and is not part of this package's API. Upstream material/light limitations still apply; custom postprocessing is not exported or reproduced.
+
+Standalone development pins [bhouston/three-gpu-pathtracer](https://github.com/bhouston/three-gpu-pathtracer) as `submodules/three-gpu-pathtracer`, tracking its `ss-fidelity` branch with an exact committed revision. The local pnpm workspace links that fork instead of installing its published package. A containing fidelity workspace can override the dependency with its own shared fork. Runtime consumers still supply the peer; the nested development submodule is not bundled into the npm package.
 
 ```sh
+git-dedup clone --recurse-submodules https://github.com/bhouston/fidelity-kit-three-gpu-pathtracer.git
+# Existing checkout: git-dedup submodule update --init --recursive
 pnpm install --frozen-lockfile
 pnpm build
 pnpm tsc

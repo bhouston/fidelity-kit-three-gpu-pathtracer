@@ -23,7 +23,8 @@ import type {
 } from "three";
 import { FullScreenQuad } from "three/addons/postprocessing/Pass.js";
 import { clone } from "three/addons/utils/SkeletonUtils.js";
-import { WebGLPathTracer } from "three-gpu-pathtracer";
+// Explicit ESM source entry also works with releases whose package root still selects a CommonJS bundle.
+import { WebGLPathTracer } from "three-gpu-pathtracer/src/index.js";
 import { CubeToEquirectGenerator } from "three-gpu-pathtracer/src/utils/CubeToEquirectGenerator.js";
 
 export interface GradientBackground {

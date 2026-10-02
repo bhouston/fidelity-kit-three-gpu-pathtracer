@@ -45,6 +45,8 @@ export interface RendererOptions {
   environment?: Texture | { scene: Scene; resolution?: number } | null;
   /** Screen-space linear-color gradient. Omit to retain scene.background. */
   gradientBackground?: GradientBackground;
+  /** readPixels() throws when every RGB value is 0, which usually means a lost GPU context. Defaults to true. */
+  failAllBlack?: boolean;
 }
 export interface Renderer {
   readonly name: "three-gpu-pathtracer";
@@ -53,7 +55,27 @@ export interface Renderer {
   render(): void;
   setSize(width: number, height: number): void;
   setCamera(camera: PerspectiveCamera | OrthographicCamera): void;
+  /** The displayed image as RGBA8, top row first. Throws on an all-black image unless failAllBlack is false. */
+  readPixels(): Uint8Array;
   dispose(): void;
+}
+
+/** True when every RGB value of an RGBA8 image is 0. */
+export function isAllBlack(pixels: Uint8Array): boolean {
+  for (let i = 0; i < pixels.length; i += 4)
+    if (pixels[i] || pixels[i + 1] || pixels[i + 2]) return false;
+  return true;
+}
+
+/** Throws on an all-black image unless `failAllBlack` is false. */
+export function assertNotAllBlack(
+  pixels: Uint8Array,
+  { failAllBlack = true }: Pick<RendererOptions, "failAllBlack"> = {},
+): void {
+  if (failAllBlack && isAllBlack(pixels))
+    throw new Error(
+      "Render is all black (GPU context lost?); set failAllBlack: false if that is expected",
+    );
 }
 /** Explicitly bake a procedural scene to readable equirectangular HDR data. Caller owns the returned texture. */
 export function bakeEnvironment(
@@ -142,6 +164,8 @@ export async function createRenderer(options: RendererOptions): Promise<Renderer
     throw new Error("Specify toneMappingExposure explicitly");
   if (!["srgb", "srgb-linear"].includes(options.outputColorSpace))
     throw new Error("Specify outputColorSpace explicitly");
+  if (options.failAllBlack !== undefined && typeof options.failAllBlack !== "boolean")
+    throw new Error("failAllBlack must be a boolean");
   const scene = clone(options.scene) as Scene;
   dequantizeAttributes(scene);
   let camera = options.camera.clone();
@@ -224,6 +248,20 @@ export async function createRenderer(options: RendererOptions): Promise<Renderer
         adoptCamera(source);
         updateSize(renderer.domElement.width, renderer.domElement.height);
         tracer.setCamera(camera);
+      },
+      readPixels() {
+        // the drawing buffer is preserved, so it still holds the last presented sample
+        const { width: w, height: h } = renderer.domElement;
+        const gl = renderer.getContext();
+        renderer.setRenderTarget(null);
+        const bottomFirst = new Uint8Array(w * h * 4);
+        gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, bottomFirst);
+        const pixels = new Uint8Array(bottomFirst.length);
+        const stride = w * 4;
+        for (let y = 0; y < h; y++)
+          pixels.set(bottomFirst.subarray(y * stride, (y + 1) * stride), (h - 1 - y) * stride);
+        assertNotAllBlack(pixels, options);
+        return pixels;
       },
       dispose,
     };

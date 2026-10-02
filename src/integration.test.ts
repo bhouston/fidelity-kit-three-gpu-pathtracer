@@ -48,6 +48,8 @@ it.skipIf(process.env.WEBGL_INTEGRATION !== "1")(
       const { data } = canvas.getImageData();
       expect(data[(8 * 16 + 8) * 4]!).toBeGreaterThan(0);
       expect(data[0]).toBeGreaterThan(100);
+      // readPixels matches the canvas readback, top row first
+      expect([...handle.readPixels()]).toEqual([...data]);
       handle.setSize(8, 8);
       expect(handle.frames).toBe(0);
       const second = camera.clone();

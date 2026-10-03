@@ -20,6 +20,8 @@ import type {
   OrthographicCamera,
   Texture,
   ToneMapping,
+  DirectionalLight,
+  SpotLight,
 } from "three";
 import { FullScreenQuad } from "three/addons/postprocessing/Pass.js";
 import { clone } from "three/addons/utils/SkeletonUtils.js";
@@ -155,6 +157,36 @@ export function dequantizeAttributes(scene: Object3D): void {
   });
 }
 
+/** Clone the scene while retaining light targets in the cloned hierarchy and external targets in world space. */
+export function cloneScene(source: Scene): Scene {
+  source.updateWorldMatrix(true, true);
+  const scene = clone(source) as Scene;
+  const originals: Object3D[] = [];
+  const copies: Object3D[] = [];
+  source.traverse((object) => originals.push(object));
+  scene.traverse((object) => copies.push(object));
+  const mapping = new Map(originals.map((object, index) => [object, copies[index]!]));
+  for (const object of originals) {
+    const light = object as DirectionalLight | SpotLight;
+    if (
+      !("isDirectionalLight" in light && light.isDirectionalLight) &&
+      !("isSpotLight" in light && light.isSpotLight)
+    )
+      continue;
+    const copy = mapping.get(light) as DirectionalLight | SpotLight;
+    const target = mapping.get(light.target);
+    if (target) copy.target = target;
+    else {
+      light.target.updateWorldMatrix(true, false);
+      copy.target.matrix.copy(light.target.matrixWorld);
+      copy.target.matrix.decompose(copy.target.position, copy.target.quaternion, copy.target.scale);
+      copy.target.matrixWorld.copy(light.target.matrixWorld);
+    }
+  }
+  scene.updateMatrixWorld(true);
+  return scene;
+}
+
 /** Full beauty rendering with the legacy WebGL backend. No DOM/GPU setup is inferred. */
 export async function createRenderer(options: RendererOptions): Promise<Renderer> {
   const { canvas, width, height, gradientBackground } = options;
@@ -166,7 +198,7 @@ export async function createRenderer(options: RendererOptions): Promise<Renderer
     throw new Error("Specify outputColorSpace explicitly");
   if (options.failAllBlack !== undefined && typeof options.failAllBlack !== "boolean")
     throw new Error("failAllBlack must be a boolean");
-  const scene = clone(options.scene) as Scene;
+  const scene = cloneScene(options.scene);
   dequantizeAttributes(scene);
   let camera = options.camera.clone();
   const adoptCamera = (source: PerspectiveCamera | OrthographicCamera) => {

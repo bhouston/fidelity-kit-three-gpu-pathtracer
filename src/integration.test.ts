@@ -69,3 +69,63 @@ it.skipIf(process.env.WEBGL_INTEGRATION !== "1")(
   },
   120_000,
 );
+
+it.skipIf(process.env.WEBGL_INTEGRATION !== "1")(
+  "keeps directional illumination invariant when a scene and its light target are translated",
+  async () => {
+    const { installDOM, createCanvas } = await import("@onirenaud/node-webgl");
+    installDOM();
+    const {
+      Scene,
+      Mesh,
+      PlaneGeometry,
+      MeshStandardMaterial,
+      PerspectiveCamera,
+      DirectionalLight,
+      NoToneMapping,
+    } = await import("three");
+    const { createRenderer } = await import("./index.js");
+    const centerPixels: number[] = [];
+    for (const offset of [0, 10]) {
+      const scene = new Scene();
+      const mesh = new Mesh(new PlaneGeometry(4, 4), new MeshStandardMaterial({ roughness: 1 }));
+      mesh.position.x = offset;
+      const light = new DirectionalLight(0xffffff, Math.PI);
+      light.position.set(offset, 0, 5);
+      light.target.position.set(offset, 0, 0);
+      scene.add(mesh, light, light.target);
+      const camera = new PerspectiveCamera(45, 1, 0.1, 100);
+      camera.position.set(offset, 0, 5);
+      const canvas = createCanvas(16, 16);
+      const handle = await createRenderer({
+        canvas: canvas as unknown as HTMLCanvasElement,
+        scene,
+        camera,
+        width: 16,
+        height: 16,
+        toneMapping: NoToneMapping,
+        toneMappingExposure: 1,
+        outputColorSpace: "srgb",
+      });
+      try {
+        const deadline = performance.now() + 30_000;
+        while (handle.frames < 64 && performance.now() < deadline) {
+          handle.render();
+          await new Promise((resolve) => setImmediate(resolve));
+        }
+        expect(handle.frames).toBe(64);
+        const data = canvas.getImageData().data;
+        let sum = 0;
+        for (let y = 4; y < 12; y++) for (let x = 4; x < 12; x++) sum += data[(y * 16 + x) * 4]!;
+        centerPixels.push(sum / 64);
+      } finally {
+        handle.dispose();
+        mesh.geometry.dispose();
+        (mesh.material as typeof mesh.material & { dispose(): void }).dispose();
+      }
+    }
+    expect(centerPixels[0]).toBeGreaterThan(180);
+    expect(Math.abs(centerPixels[0]! - centerPixels[1]!)).toBeLessThan(8);
+  },
+  120_000,
+);

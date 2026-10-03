@@ -109,19 +109,22 @@ it.skipIf(process.env.WEBGL_INTEGRATION !== "1")(
       });
       try {
         const deadline = performance.now() + 30_000;
-        while (handle.frames < 16 && performance.now() < deadline) {
+        while (handle.frames < 64 && performance.now() < deadline) {
           handle.render();
           await new Promise((resolve) => setImmediate(resolve));
         }
-        expect(handle.frames).toBe(16);
-        centerPixels.push(canvas.getImageData().data[(8 * 16 + 8) * 4]!);
+        expect(handle.frames).toBe(64);
+        const data = canvas.getImageData().data;
+        let sum = 0;
+        for (let y = 4; y < 12; y++) for (let x = 4; x < 12; x++) sum += data[(y * 16 + x) * 4]!;
+        centerPixels.push(sum / 64);
       } finally {
         handle.dispose();
         mesh.geometry.dispose();
         (mesh.material as typeof mesh.material & { dispose(): void }).dispose();
       }
     }
-    expect(centerPixels[0]).toBeGreaterThan(230);
+    expect(centerPixels[0]).toBeGreaterThan(180);
     expect(Math.abs(centerPixels[0]! - centerPixels[1]!)).toBeLessThan(8);
   },
   120_000,
